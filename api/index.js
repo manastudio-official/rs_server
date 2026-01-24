@@ -1,8 +1,6 @@
 import app from '../src/app.js';
 import connectDB from '../src/config/database.js';
 import logger from '../src/utils/logger.js';
-import fs from 'fs';
-import path from 'path';
 
 const PORT = process.env.PORT || 5000;
 
