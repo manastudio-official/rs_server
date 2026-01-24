@@ -1,6 +1,6 @@
-import app from './src/app.js';
-import connectDB from './src/config/database.js';
-import logger from './src/utils/logger.js';
+import app from '../src/app.js';
+import connectDB from '../src/config/database.js';
+import logger from '../src/utils/logger.js';
 import fs from 'fs';
 import path from 'path';
 

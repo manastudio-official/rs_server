@@ -2,12 +2,12 @@
     "name": "ecommerce-booking-api",
     "version": "1.0.0",
     "description": "Complete E-commerce API with Booking System, Razorpay Payment Gateway & AWS S3 Integration",
-    "main": "server.js",
+    "main": "api/index.js",
     "type": "module",
     "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js",
-        "prod": "NODE_ENV=production node server.js",
+        "start": "NODE_ENV=production node api/index.js",
+        "dev": "nodemon  api/index.js",
+        "prod": "NODE_ENV=production node api/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
