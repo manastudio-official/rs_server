@@ -41,7 +41,7 @@ const logger = winston.createLogger({
 });
 
 // Console logging for development
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== undefined) {
   logger.add(new winston.transports.Console({
     format: combine(
       colorize(),
