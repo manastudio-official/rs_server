@@ -137,7 +137,7 @@ export const getAllProducts = async (req, res, next) => {
       search,
       tags,
       brand,
-      inStock,
+      stockStatus,
       featured
     } = req.query;
 
@@ -149,7 +149,14 @@ export const getAllProducts = async (req, res, next) => {
     if (collection) query.collection = collection;
     if (brand) query.brand = brand;
     if (featured === 'true') query.isFeatured = true;
-    if (inStock === 'true') query.stock = { $gt: 0 };
+    if (stockStatus) {
+      if (stockStatus === 'inStock') {
+        query.stock = { $gt: 0 };
+      } else if (stockStatus === 'outOfStock') {
+        query.stock = { $lte: 0 };
+      }
+     
+    }
 
     if (minPrice || maxPrice) {
       query.price = {};
@@ -158,9 +165,13 @@ export const getAllProducts = async (req, res, next) => {
     }
 
     if (search) {
-      query.$text = { $search: search };
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { sku: { $regex: search, $options: "i" } },
+      ];
     }
-
+    
+    
     if (tags) {
       query.tags = { $in: tags.split(',').map(tag => tag.trim()) };
     }
