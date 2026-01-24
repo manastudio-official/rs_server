@@ -5,9 +5,9 @@
     "main": "api/index.js",
     "type": "module",
     "scripts": {
-        "start": "NODE_ENV=production node api/index.js",
+        "start": "ENV_NODE=production node api/index.js",
         "dev": "nodemon  api/index.js",
-        "prod": "NODE_ENV=production node api/index.js",
+        "prod": "ENV_NODE=production node api/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [

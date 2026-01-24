@@ -18,7 +18,7 @@ const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => 
 });
 
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  level: process.env.ENV_NODE === 'production' ? 'info' : 'debug',
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     errors({ stack: true }),
@@ -41,7 +41,7 @@ const logger = winston.createLogger({
 });
 
 // Console logging for development
-if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== undefined) {
+if (process.env.ENV_NODE !== 'production' ) {
   logger.add(new winston.transports.Console({
     format: combine(
       colorize(),

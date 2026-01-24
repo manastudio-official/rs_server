@@ -3,7 +3,7 @@ import logger from '../utils/logger.js';
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.NODE_ENV === 'production' 
+    const mongoURI = process.env.ENV_NODE === 'production' 
       ? process.env.MONGODB_URI_PROD 
       : process.env.MONGODB_URI;
 
