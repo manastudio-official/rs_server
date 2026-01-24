@@ -6,12 +6,6 @@ import path from 'path';
 
 const PORT = process.env.PORT || 5000;
 
-// Create logs directory if it doesn't exist
-const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
-}
-
 // Connect to database
 connectDB();
 
