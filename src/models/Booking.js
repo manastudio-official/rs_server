@@ -30,9 +30,9 @@ const bookingSchema = new mongoose.Schema({
     match: [/^[6-9]\d{9}$/, 'Please provide a valid Indian phone number']
   },
   address: {
-    streetOrApartment: {
+    street: {
       type: String,
-      required: [true, 'Street/Apartment is required'],
+      required: [true, 'street/Apartment is required'],
       trim: true
     },
     city: {

@@ -18,6 +18,11 @@ export const createBooking = async (req, res, next) => {
       notes
     } = req.body;
 
+    // Generate bookingId BEFORE creating
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const bookingId = `BK${timestamp}${random}`;
+
     // Auto-fetch city and state from pincode
     if (address.pincode) {
       const locationData = await getAddressFromPincode(address.pincode);
@@ -46,6 +51,9 @@ export const createBooking = async (req, res, next) => {
       if (!dbProduct) {
         return next(new AppError(`Product not found`, 404));
       }
+      if(!dbProduct.stock) {
+        return next(new AppError(`Product ${dbProduct.name} is out of stock`, 400));
+      }
       if (dbProduct.stock < item.quantity) {
         return next(new AppError(`Insufficient stock for ${dbProduct.name}. Only ${dbProduct.stock} available`, 400));
       }
@@ -69,6 +77,7 @@ export const createBooking = async (req, res, next) => {
     expectedDelivery.setDate(expectedDelivery.getDate() + 7);
 
     const booking = await Booking.create({
+      bookingId, // ✅ Add the generated bookingId here
       firstName,
       lastName,
       email,
@@ -87,6 +96,7 @@ export const createBooking = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // Get booking by ID - PUBLIC (with verification)
 export const getBookingById = async (req, res, next) => {
