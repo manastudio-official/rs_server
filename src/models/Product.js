@@ -66,7 +66,7 @@ const productSchema = new mongoose.Schema(
         trim: true,
       },
     ],
-    deal_name: {
+    dealname: {
       type: String,
       trim: true,
     },

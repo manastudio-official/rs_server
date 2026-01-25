@@ -315,3 +315,38 @@ export const getBrands = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTags = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+
+    const pipeline = [
+      { $match: { isActive: true } },
+      { $unwind: "$tags" },
+    ];
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          tags: { $regex: search, $options: "i" }
+        }
+      });
+    }
+
+    pipeline.push(
+      { $group: { _id: "$tags" } },
+      { $sort: { _id: 1 } }
+    );
+
+    const tags = await Product.aggregate(pipeline);
+
+    const formattedTags = tags.map(t => ({
+      label: t._id,
+      value: t._id
+    }));
+
+    successResponse(res, 200, formattedTags);
+  } catch (error) {
+    next(error);
+  }
+};
