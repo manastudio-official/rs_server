@@ -187,7 +187,7 @@ const handlePaymentCaptured = async (payload) => {
         $inc: { stock: -item.quantity },
       });
     }
-    const result = await sendOrderEmail(bookingData);
+    const result = await sendOrderEmail(booking);
 
     if (result.success) {
       console.log("Email sent to:", result.recipients);
