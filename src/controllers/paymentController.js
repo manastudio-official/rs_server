@@ -109,7 +109,6 @@ export const verifyPayment = async (req, res, next) => {
         $inc: { stock: -item.quantity },
       });
     }
-    sendOrderEmail(booking);
     logger.info(
       `Payment verified: ${razorpay_payment_id} for booking ${bookingId}`
     );
@@ -188,7 +187,13 @@ const handlePaymentCaptured = async (payload) => {
         $inc: { stock: -item.quantity },
       });
     }
+    const result = await sendOrderEmail(bookingData);
 
+    if (result.success) {
+      console.log("Email sent to:", result.recipients);
+    } else {
+      console.error("Email failed:", result.error);
+    }
     logger.info(`Payment captured via webhook: ${payload.id}`);
   }
 };

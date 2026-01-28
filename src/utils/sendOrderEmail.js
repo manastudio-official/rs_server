@@ -1,59 +1,109 @@
 import axios from "axios";
 import qs from "qs";
 
-/**
- * Send order / booking details via FormSubmit email
- * FAIL-SAFE & 403-safe
- */
 const sendOrderEmail = async (booking) => {
   try {
-    if (!booking) return;
+    // Validate booking data
+    if (!booking || !booking.bookingId) {
+      console.warn("Invalid booking data - skipping email");
+      return { success: false, error: "Invalid booking data" };
+    }
 
-    const formUrl = "https://formsubmit.co/manastudioofficial@gmail.com";
+    // Validate customer email exists
+    if (!booking.customer?.email) {
+      console.warn("Customer email missing - sending to admin only");
+    }
 
+    const adminEmail = "manastudioofficial@gmail.com";
+
+    // Format products list for email
     const productsText = Array.isArray(booking.products)
       ? booking.products
           .map(
             (p, i) =>
-              `${i + 1}. ${p.name || p.product} | Qty: ${p.quantity} | Price: ₹${p.price}`
+              `${i + 1}. ${p.name || p.product || "Unknown"} | Qty: ${
+                p.quantity || 0
+              } | Price: ₹${p.price || 0}`
           )
           .join("\n")
-      : "N/A";
+      : "No products listed";
 
+    // Prepare payload with all order details
     const payload = {
+      // FormSubmit Configuration
       _subject: `New Order Confirmed - ${booking.bookingId}`,
-      _template: "table",
-      _captcha: "false",
+      _template: "table", // Use table format for better readability
+      _captcha: "false", // Disable captcha for API submissions
+      _cc: booking.customer?.email || "", // Send copy to customer
 
-      bookingId: booking.bookingId,
-      customerName: booking.customer?.name,
-      customerEmail: booking.customer?.email,
-      customerPhone: booking.customer?.phone,
+      // Order Information
+      "Booking ID": booking.bookingId,
+      "Order Status": booking.bookingStatus || "Confirmed",
+      "Order Date": booking.createdAt || new Date().toISOString(),
 
-      paymentId: booking.paymentInfo?.razorpayPaymentId,
-      paymentStatus: booking.paymentInfo?.paymentStatus,
-      paidAt: booking.paymentInfo?.paidAt,
+      // Customer Details
+      "Customer Name": booking.customer?.name || "N/A",
+      "Customer Email": booking.customer?.email || "N/A",
+      "Customer Phone": booking.customer?.phone || "N/A",
 
-      totalAmount: booking.totalAmount,
-      bookingStatus: booking.bookingStatus,
+      // Payment Information
+      "Payment ID": booking.paymentInfo?.razorpayPaymentId || "N/A",
+      "Payment Status": booking.paymentInfo?.paymentStatus || "Pending",
+      "Paid At": booking.paymentInfo?.paidAt || "N/A",
+      "Total Amount": `₹${booking.totalAmount || 0}`,
 
-      products: productsText,
-      address: booking.shippingAddress?.fullAddress,
-      createdAt: booking.createdAt,
+      // Order Details
+      Products: productsText,
+      "Shipping Address": booking.shippingAddress?.fullAddress || "N/A",
     };
 
-    await axios.post(formUrl, qs.stringify(payload), {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      timeout: 5000,
-    });
-  } catch (error) {
-    // SILENT FAIL — expected sometimes
-    console.warn(
-      "FormSubmit order email skipped:",
-      error?.response?.status || error.message
+    // Send email via FormSubmit
+    const response = await axios.post(
+      `https://formsubmit.co/${adminEmail}`,
+      qs.stringify(payload),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        timeout: 8000, // 8 second timeout
+      }
     );
+
+    // Log success
+    if (response.status === 200) {
+      console.log(
+        `✅ Order email sent successfully to admin${
+          booking.customer?.email ? " and customer" : ""
+        }: ${booking.bookingId}`
+      );
+      return {
+        success: true,
+        message: "Email sent successfully",
+        recipients: {
+          admin: adminEmail,
+          customer: booking.customer?.email || null,
+        },
+      };
+    }
+
+    return { success: false, error: "Unexpected response status" };
+  } catch (error) {
+    // Enhanced error logging with silent fail
+    const errorInfo = {
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      message: error.message,
+      bookingId: booking?.bookingId,
+    };
+
+    console.warn("⚠️ FormSubmit order email failed:", errorInfo);
+
+    // Return error details for optional retry logic
+    return {
+      success: false,
+      error: error.message,
+      details: errorInfo,
+    };
   }
 };
 
