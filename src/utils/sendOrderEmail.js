@@ -16,7 +16,7 @@ const sendOrderEmail = async (booking) => {
 
     // Send to admin
     await resend.emails.send({
-      from: 'order.ramisilks.com',
+      from: 'order@order.ramisilks.com',
       to: 'manastudioofficial@gmail.com',
       subject: `New Order - ${booking.bookingId}`,
       html: `
@@ -35,7 +35,7 @@ const sendOrderEmail = async (booking) => {
 
     // Send to customer
     await resend.emails.send({
-      from: 'order.ramisilks.com',
+      from: 'order@order.ramisilks.com',
       to: booking.email,
       subject: `Order Confirmation - ${booking.bookingId}`,
       html: `
