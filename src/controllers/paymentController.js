@@ -83,6 +83,10 @@ export const verifyPayment = async (req, res, next) => {
 
     // Update booking
     const booking = await Booking.findOne({ bookingId });
+    
+    if(booking.bookingStatus === "confirmed") {
+      return successResponse(res, 200, { booking }, "Payment already verified");
+    }
 
     if (!booking) {
       return next(new AppError("Booking not found", 404));
@@ -108,6 +112,15 @@ export const verifyPayment = async (req, res, next) => {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: -item.quantity },
       });
+    }
+
+    console.log("Sending email...", booking);
+    const result = await sendOrderEmail(booking);
+
+    if (result?.success) {
+      console.log("Email sent to:", result?.recipients || "Unknown recipients");
+    } else {
+      console.error("Email failed:", result?.error || "Unknown error");
     }
     logger.info(
       `Payment verified: ${razorpay_payment_id} for booking ${bookingId}`
