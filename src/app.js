@@ -48,6 +48,7 @@ app.use(helmet({
 const allowedOrigins = [
   'http://localhost:3000',
   'https://www.ramisilks.com/',
+  'https://ramisilks.com/',
   process.env.FRONTEND_URL || ''
 ];
 
