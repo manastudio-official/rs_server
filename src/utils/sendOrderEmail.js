@@ -1,17 +1,18 @@
 import axios from "axios";
 import qs from "qs";
 
+/**
+ * Send order/booking details to both admin and customer via FormSubmit
+ * Sends URL-encoded form data matching FormSubmit's expected format
+ * @param {Object} booking - Complete booking object
+ * @returns {Promise<Object>} Success status
+ */
 const sendOrderEmail = async (booking) => {
   try {
     // Validate booking data
     if (!booking || !booking.bookingId) {
       console.warn("Invalid booking data - skipping email");
       return { success: false, error: "Invalid booking data" };
-    }
-
-    // Validate customer email exists
-    if (!booking.customer?.email) {
-      console.warn("Customer email missing - sending to admin only");
     }
 
     const adminEmail = "manastudioofficial@gmail.com";
@@ -21,61 +22,61 @@ const sendOrderEmail = async (booking) => {
       ? booking.products
           .map(
             (p, i) =>
-              `${i + 1}. ${p.name || p.product || "Unknown"} | Qty: ${
+              `${i + 1}. ${p.name || p.product || "Unknown"} - Qty: ${
                 p.quantity || 0
-              } | Price: ₹${p.price || 0}`
+              } - Price: ₹${p.price || 0}`
           )
           .join("\n")
       : "No products listed";
 
-    // Prepare payload with all order details
-    const payload = {
-      // FormSubmit Configuration
+    // Prepare form data payload (matching your FormSubmit format)
+    const formData = {
       _subject: `New Order Confirmed - ${booking.bookingId}`,
-      _template: "table", // Use table format for better readability
-      _captcha: "false", // Disable captcha for API submissions
-      _cc: booking.customer?.email || "", // Send copy to customer
-
-      // Order Information
+      _captcha: "false",
+      _template: "table",
+      _cc: booking.customer?.email || "", // CC customer email
+      
+      // Order details
       "Booking ID": booking.bookingId,
       "Order Status": booking.bookingStatus || "Confirmed",
       "Order Date": booking.createdAt || new Date().toISOString(),
-
-      // Customer Details
-      "Customer Name": booking.customer?.name || "N/A",
-      "Customer Email": booking.customer?.email || "N/A",
-      "Customer Phone": booking.customer?.phone || "N/A",
-
-      // Payment Information
+      
+      // Customer info
+      name: booking.customer?.name || "N/A",
+      email: booking.customer?.email || "N/A",
+      phone: booking.customer?.phone || "N/A",
+      
+      // Payment details
       "Payment ID": booking.paymentInfo?.razorpayPaymentId || "N/A",
       "Payment Status": booking.paymentInfo?.paymentStatus || "Pending",
       "Paid At": booking.paymentInfo?.paidAt || "N/A",
       "Total Amount": `₹${booking.totalAmount || 0}`,
-
-      // Order Details
-      Products: productsText,
+      
+      // Order items and shipping
+      products: productsText,
       "Shipping Address": booking.shippingAddress?.fullAddress || "N/A",
     };
 
-    // Send email via FormSubmit
+    // Send POST request with URL-encoded form data
     const response = await axios.post(
       `https://formsubmit.co/${adminEmail}`,
-      qs.stringify(payload),
+      qs.stringify(formData),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        timeout: 8000, // 8 second timeout
+        timeout: 8000,
       }
     );
 
-    // Log success
+    // Success logging
     if (response.status === 200) {
       console.log(
         `✅ Order email sent successfully to admin${
           booking.customer?.email ? " and customer" : ""
         }: ${booking.bookingId}`
       );
+      
       return {
         success: true,
         message: "Email sent successfully",
@@ -87,8 +88,8 @@ const sendOrderEmail = async (booking) => {
     }
 
     return { success: false, error: "Unexpected response status" };
+
   } catch (error) {
-    // Enhanced error logging with silent fail
     const errorInfo = {
       status: error?.response?.status,
       statusText: error?.response?.statusText,
@@ -98,7 +99,6 @@ const sendOrderEmail = async (booking) => {
 
     console.warn("⚠️ FormSubmit order email failed:", errorInfo);
 
-    // Return error details for optional retry logic
     return {
       success: false,
       error: error.message,
