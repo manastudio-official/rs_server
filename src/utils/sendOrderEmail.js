@@ -1,111 +1,52 @@
-/**
- * Send order/booking details to both admin and customer via FormSubmit AJAX endpoint
- * Uses JSON format for cleaner data structure
- * @param {Object} booking - Complete booking object
- * @returns {Promise<Object>} Success status
- */
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const sendOrderEmail = async (booking) => {
   try {
-    // Validate booking data
-    if (!booking || !booking.bookingId) {
-      console.warn("Invalid booking data - skipping email");
-      return { success: false, error: "Invalid booking data" };
-    }
+    const productsHTML = booking.products
+      ?.map(p => `<li>${p.name} - Qty: ${p.quantity} - ₹${p.price}</li>`)
+      .join('');
 
-    const adminEmail = "manastudioofficial@gmail.com";
+    // Send to admin
+    await resend.emails.send({
+      from: 'orders@ramisilks.com',
+      to: 'manastudioofficial@gmail.com',
+      subject: `New Order - ${booking.bookingId}`,
+      html: `
+        <h2>New Order Received</h2>
+        <p><strong>Order ID:</strong> ${booking.bookingId}</p>
+        <p><strong>Customer:</strong> ${booking.customer?.name}</p>
+        <p><strong>Email:</strong> ${booking.customer?.email}</p>
+        <p><strong>Phone:</strong> ${booking.customer?.phone}</p>
+        <p><strong>Payment ID:</strong> ${booking.paymentInfo?.razorpayPaymentId}</p>
+        <p><strong>Total:</strong> ₹${booking.totalAmount}</p>
+        <h3>Products:</h3>
+        <ul>${productsHTML}</ul>
+        <p><strong>Address:</strong> ${booking.shippingAddress?.fullAddress}</p>
+      `
+    });
 
-    // Format products list for email
-    const productsText = Array.isArray(booking.products)
-      ? booking.products
-          .map(
-            (p, i) =>
-              `${i + 1}. ${p.name || p.product || "Unknown"} - Qty: ${
-                p.quantity || 0
-              } - Price: ₹${p.price || 0}`
-          )
-          .join("\n")
-      : "No products listed";
+    // Send to customer
+    await resend.emails.send({
+      from: 'orders@ramisilks.com',
+      to: booking.customer?.email,
+      subject: `Order Confirmation - ${booking.bookingId}`,
+      html: `
+        <h2>Thank you for your order!</h2>
+        <p>Hi ${booking.customer?.name},</p>
+        <p>Your order <strong>${booking.bookingId}</strong> has been confirmed.</p>
+        <h3>Order Details:</h3>
+        <ul>${productsHTML}</ul>
+        <p><strong>Total:</strong> ₹${booking.totalAmount}</p>
+        <p>We'll process your order shortly!</p>
+      `
+    });
 
-    // Prepare JSON payload for AJAX endpoint
-    const payload = {
-      // FormSubmit configuration
-      _subject: `New Order Confirmed - ${booking.bookingId}`,
-      _captcha: "false",
-      _template: "table",
-      _cc: booking.customer?.email || "", // CC customer email
-
-      // Order Information
-      "Booking ID": booking.bookingId,
-      "Order Status": booking.bookingStatus || "Confirmed",
-      "Order Date": booking.createdAt || new Date().toISOString(),
-
-      // Customer Details
-      "Customer Name": booking.customer?.name || "N/A",
-      "Customer Email": booking.customer?.email || "N/A",
-      "Customer Phone": booking.customer?.phone || "N/A",
-
-      // Payment Information
-      "Payment ID": booking.paymentInfo?.razorpayPaymentId || "N/A",
-      "Payment Status": booking.paymentInfo?.paymentStatus || "Pending",
-      "Paid At": booking.paymentInfo?.paidAt || "N/A",
-      "Total Amount": `₹${booking.totalAmount || 0}`,
-
-      // Order Details
-      Products: productsText,
-      "Shipping Address": booking.shippingAddress?.fullAddress || "N/A",
-    };
-
-    // Send to FormSubmit AJAX endpoint
-    const response = await fetch(
-      `https://formsubmit.co/ajax/${adminEmail}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const data = await response.json();
-
-    // Check response
-    if (response.ok && data.success) {
-      console.log(
-        `✅ Order email sent successfully to admin${
-          booking.customer?.email ? " and customer" : ""
-        }: ${booking.bookingId}`
-      );
-
-      return {
-        success: true,
-        message: data.message || "Email sent successfully",
-        recipients: {
-          admin: adminEmail,
-          customer: booking.customer?.email || null,
-        },
-      };
-    }
-
-    return {
-      success: false,
-      error: data.message || "Failed to send email",
-    };
-
+    return { success: true };
   } catch (error) {
-    const errorInfo = {
-      message: error.message,
-      bookingId: booking?.bookingId,
-    };
-
-    console.warn("⚠️ FormSubmit order email failed:", errorInfo);
-
-    return {
-      success: false,
-      error: error.message,
-      details: errorInfo,
-    };
+    console.error('Email failed:', error);
+    return { success: false, error: error.message };
   }
 };
 
