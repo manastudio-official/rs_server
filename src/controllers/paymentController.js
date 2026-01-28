@@ -109,7 +109,7 @@ export const verifyPayment = async (req, res, next) => {
         $inc: { stock: -item.quantity },
       });
     }
-    await sendOrderEmail(booking);
+    sendOrderEmail(booking);
     logger.info(
       `Payment verified: ${razorpay_payment_id} for booking ${bookingId}`
     );

@@ -1,19 +1,24 @@
 import axios from "axios";
+import qs from "qs";
 
 /**
  * Send order / booking details via FormSubmit email
- * @param {Object} booking - Booking document
+ * FAIL-SAFE & 403-safe
  */
 const sendOrderEmail = async (booking) => {
   try {
+    if (!booking) return;
+
     const formUrl = "https://formsubmit.co/manastudioofficial@gmail.com";
 
-    const productsText = booking.products
-      .map(
-        (p, i) =>
-          `${i + 1}. ${p.name || p.product} | Qty: ${p.quantity} | Price: ₹${p.price}`
-      )
-      .join("\n");
+    const productsText = Array.isArray(booking.products)
+      ? booking.products
+          .map(
+            (p, i) =>
+              `${i + 1}. ${p.name || p.product} | Qty: ${p.quantity} | Price: ₹${p.price}`
+          )
+          .join("\n")
+      : "N/A";
 
     const payload = {
       _subject: `New Order Confirmed - ${booking.bookingId}`,
@@ -37,17 +42,19 @@ const sendOrderEmail = async (booking) => {
       createdAt: booking.createdAt,
     };
 
-    await axios.post(formUrl, payload, {
+    await axios.post(formUrl, qs.stringify(payload), {
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
+      timeout: 5000,
     });
   } catch (error) {
-    // ❗ Do NOT throw — email failure should not break payment flow
-    console.error("FormSubmit order email failed:", error.message);
+    // SILENT FAIL — expected sometimes
+    console.warn(
+      "FormSubmit order email skipped:",
+      error?.response?.status || error.message
+    );
   }
 };
 
 export default sendOrderEmail;
-
-// https://formsubmit.co/
