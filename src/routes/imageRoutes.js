@@ -1,11 +1,12 @@
 import express from 'express';
-import upload from '../middlewares/multer.js';
+import { upload } from '../middlewares/upload.js';
+
 import {
   uploadToS3,
   uploadMultipleToS3,
   deleteFromS3,
   getSignedS3Url,
-} from '../utils/s3Utils.js';
+} from '../utils/s3Upload.js';
 
 const router = express.Router();
 
