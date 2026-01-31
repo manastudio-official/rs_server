@@ -14,7 +14,7 @@ import productRoutes from './routes/productRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-
+import imageRoutes from './routes/imageRoutes.js';
 // Import middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
 import { globalRateLimiter } from './middlewares/rateLimiter.js';
@@ -116,7 +116,7 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/admin', adminRoutes);
-
+app.use('/api/v1/images', imageRoutes);
 // Welcome route
 app.get('/', (req, res) => {
   res.json({
