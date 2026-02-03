@@ -111,7 +111,7 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    isFeatured: {
+    silkMarkcertified: {
       type: Boolean,
       default: false,
     },

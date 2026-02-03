@@ -70,8 +70,8 @@ export const createProduct = async (req, res, next) => {
     if (typeof productData.isActive === "string") {
       productData.isActive = productData.isActive === "true";
     }
-    if (typeof productData.isFeatured === "string") {
-      productData.isFeatured = productData.isFeatured === "true";
+    if (typeof productData.silkMarkcertified === "string") {
+      productData.silkMarkcertified = productData.silkMarkcertified === "true";
     }
 
     // Convert string numbers to actual numbers
@@ -121,7 +121,7 @@ export const getAllProducts = async (req, res, next) => {
     if (subcategory) query.subcategory = subcategory;
     if (collection) query.collection = collection;
     if (brand) query.brand = brand;
-    if (featured === "true") query.isFeatured = true;
+    if (featured === "true") query.silkMarkcertified = true;
     if (stockStatus) {
       if (stockStatus === "inStock") {
         query.stock = { $gt: 0 };
