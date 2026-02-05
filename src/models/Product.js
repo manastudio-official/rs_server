@@ -175,16 +175,36 @@ productSchema.pre("save", function (next) {
   next();
 });
 
-productSchema.pre("findOneAndUpdate", function (next) {
+productSchema.pre("findOneAndUpdate", async function (next) {
   const update = this.getUpdate();
 
-  if (update.name) {
-    update.slug = slugify(update.name, {
-      lower: true,
-      strict: true,
-    });
-    this.setUpdate(update);
+  if (!update.name) return next();
+
+  const baseSlug = slugify(update.name, {
+    lower: true,
+    strict: true,
+  });
+
+  let slug = baseSlug;
+  let counter = 1;
+
+  const Product = this.model;
+
+  // exclude current document from slug check
+  const currentId = this.getQuery()._id;
+
+  while (
+    await Product.exists({
+      slug,
+      _id: { $ne: currentId },
+    })
+  ) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
   }
+
+  update.slug = slug;
+  this.setUpdate(update);
 
   next();
 });
