@@ -125,8 +125,8 @@ const bookingSchema = new mongoose.Schema({
     },
     paymentMethod: {
       type: String,
-      enum: ['card', 'upi', 'netbanking', 'wallet', 'cod'],
-      default: 'card'
+  
+      default: null
     },
     paidAt: Date,
     refundAmount: Number,

@@ -181,6 +181,7 @@ const handlePaymentCaptured = async (payload) => {
 
   if (booking && booking.paymentInfo.paymentStatus !== "paid") {
     booking.paymentInfo.paymentStatus = "paid";
+    booking.paymentInfo.paymentMethod = payload.method;
     booking.paymentInfo.razorpayPaymentId = payload.id;
     booking.paymentInfo.paidAt = new Date();
     booking.bookingStatus = "confirmed";
@@ -220,6 +221,7 @@ const handlePaymentFailed = async (payload) => {
 
   if (booking) {
     booking.paymentInfo.paymentStatus = "failed";
+    booking.paymentInfo.paymentMethod = payload.method;
 
     booking.statusHistory.push({
       status: "payment_failed",
@@ -238,6 +240,7 @@ const handleRefundCreated = async (payload) => {
   const booking = await Booking.findOne({
     "paymentInfo.razorpayPaymentId": payload.payment_id,
   });
+  
 
   if (booking) {
     booking.paymentInfo.paymentStatus = "refunded";
